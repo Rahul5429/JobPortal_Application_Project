@@ -170,9 +170,10 @@ export const updateProfile = async (req, res) => {
             {
               resource_type: "raw",
               folder: "resumes",
-              public_id: req.file.originalname.replace(".pdf", ""),
+              public_id: req.file.originalname.replace(/\.pdf$/i, ""),
               use_filename: true,
               unique_filename: false,
+              format: "pdf", // ⭐ IMPORTANT: forces .pdf extension
             },
             (error, result) => {
               if (error) {
