@@ -173,7 +173,8 @@ export const updateProfile = async (req, res) => {
               public_id: req.file.originalname.replace(/\.pdf$/i, ""),
               use_filename: true,
               unique_filename: false,
-              format: "pdf", // ⭐ IMPORTANT: forces .pdf extension
+              format: "pdf",
+              access_mode: "public", // ⭐ THIS FIXES 401
             },
             (error, result) => {
               if (error) {
