@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import getDataUri from "../utils/datauri.js";
 import cloudinary from "../utils/cloudinary.js";
+import streamifier from "streamifier";
 
 /* ========================= REGISTER ========================= */
 export const register = async (req, res) => {
@@ -163,14 +164,30 @@ export const updateProfile = async (req, res) => {
     if (skills) user.profile.skills = skills.split(",");
 
     if (req.file) {
-      const fileUri = getDataUri(req.file);
+      const uploadFromBuffer = () => {
+        return new Promise((resolve, reject) => {
+          const uploadStream = cloudinary.uploader.upload_stream(
+            {
+              resource_type: "raw",
+              folder: "resumes",
+              public_id: req.file.originalname.replace(".pdf", ""),
+              use_filename: true,
+              unique_filename: false,
+            },
+            (error, result) => {
+              if (error) {
+                reject(error);
+              } else {
+                resolve(result);
+              }
+            }
+          );
 
-      const cloudResponse = await cloudinary.uploader.upload(fileUri.content, {
-        resource_type: "raw",
-        folder: "resumes",
-        use_filename: true,
-        unique_filename: false,
-      });
+          streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
+        });
+      };
+
+      const cloudResponse = await uploadFromBuffer();
 
       user.profile.resume = cloudResponse.secure_url;
       user.profile.resumeOriginalName = req.file.originalname;
